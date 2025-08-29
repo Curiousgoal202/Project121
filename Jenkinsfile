@@ -30,7 +30,13 @@ pipeline {
                   '''
                   }
                }
+       stage('Security Scan'){
+                 steps{
+                     sh 'docker run --rm -i hadolint/hadolint < Dockerfile || true
+                         }
+                   }
 
+         
         stage('Build Docker Image') {
             steps {
                 sh "docker build -t $IMAGE_NAME:$IMAGE_TAG ."
