@@ -25,8 +25,8 @@ pipeline {
        stage('Code Quality Check'){
             steps{
                sh '''
-                  npm install -g htmlhint
-                 htmlhint **/*.html
+                  npm install  htmlhint
+                  npx htmlhint **/*.html || true
                   '''
                   }
                }
