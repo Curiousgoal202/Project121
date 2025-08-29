@@ -42,6 +42,17 @@ pipeline {
                 """
             }
         }
+        stage('Health Check'){
+                  steps{
+                    script{
+                          sh "sleep 5"
+                          sh """
+                          curl -s -o /dev/null -w "%{http_code}" http://localhost:$SERVER_PORT | grep 200
+                            """
+                         }
+                   }
+               }
+
     }
     post {
         success {
