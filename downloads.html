@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Downloads</title>
+<style>
+  body{margin:0;background:#0b1220;color:#eaf1ff;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
+  header,main{max-width:1100px;margin:0 auto;padding:16px}
+  header{position:sticky;top:0;background:rgba(11,18,32,.7);backdrop-filter:blur(8px);border-bottom:1px solid #1e2a44}
+  a{color:#9dd6ff;text-decoration:none}
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+  .card{background:#121a2b;border:1px solid #1e2a44;border-radius:16px;padding:16px}
+  .muted{color:#7b8aa0}
+  .btn{padding:10px 12px;border:1px solid #1e2a44;border-radius:12px;background:#0e1729;color:#eaf1ff;cursor:pointer;width:100%}
+  .btn:hover{border-color:#4cc9f0}
+  code{background:#0e1729;border:1px solid #1e2a44;border-radius:8px;padding:2px 6px}
+</style>
+</head>
+<body>
+<header>
+  <div style="display:flex;gap:10px;align-items:center;justify-content:space-between">
+    <div><b>Downloads</b></div>
+    <nav style="display:flex;gap:10px">
+      <a href="index.html">Dashboard</a>
+      <a href="status.html">Status</a>
+      <a href="logs.html">Logs</a>
+      <a href="admin.html">Admin</a>
+      <a href="readme.html">Readme</a>
+    </nav>
+  </div>
+</header>
+<main>
+  <p class="muted">Place your artifacts at <code>/downloads/</code> on the server, or adjust the <code>href</code> links below. Checksums and copy buttons provided.</p>
+  <div class="grid" id="grid"></div>
+</main>
+<script>
+  const files = [
+    {name:'tool-linux-amd64.tar.gz', ver:'1.0.3', size:'14.2 MB', sha:'d1a7c0f2b3...a91', url:'/downloads/tool-linux-amd64.tar.gz'},
+    {name:'tool-windows-x64.zip', ver:'1.0.3', size:'16.9 MB', sha:'9b2c1147fe...33d', url:'/downloads/tool-windows-x64.zip'},
+    {name:'tool-darwin-arm64.tar.gz', ver:'1.0.3', size:'13.1 MB', sha:'88c11f99aa...7e2', url:'/downloads/tool-darwin-arm64.tar.gz'}
+  ];
+  const grid=document.getElementById('grid');
+  function card(f){return `
+    <section class="card">
+      <h3 style="margin:0 0 6px 0">${f.name}</h3>
+      <div class="muted">Version ${f.ver} • ${f.size}</div>
+      <div style="height:8px"></div>
+      <a class="btn" href="${f.url}" download>Download</a>
+      <div style="height:10px"></div>
+      <div class="muted">SHA256: <code>${f.sha}</code> <button class="btn" style="margin-top:8px" onclick="copy('${f.sha}')">Copy checksum</button></div>
+      <div style="height:8px"></div>
+      <div class="muted">Verify: <code>sha256sum ${f.name}</code></div>
+    </section>`;
+  }
+  function copy(t){ navigator.clipboard.writeText(t); }
+  grid.innerHTML = files.map(card).join('');
+</script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>DevOps WebServer – Dashboard</title>
+<style>
+  :root{--bg:#0b1220;--card:#121a2b;--muted:#7b8aa0;--text:#f3f6fb;--accent:#4cc9f0;--ok:#21c55d;--warn:#f59e0b;--err:#ef4444;--border:#1e2a44}
+  *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;background:linear-gradient(180deg,#0b1220,#0a1020 40%);}
+  header{position:sticky;top:0;background:rgba(11,18,32,.7);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);z-index:10}
+  .wrap{max-width:1200px;margin:0 auto;padding:16px}
+  h1{margin:0;color:var(--text);font-weight:700;letter-spacing:.3px}
+  nav{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
+  nav a{padding:10px 14px;border:1px solid var(--border);border-radius:14px;text-decoration:none;color:var(--text);background:var(--card)}
+  nav a:hover{border-color:var(--accent);box-shadow:0 0 0 3px rgba(76,201,240,.15)}
+  main{padding:24px 16px}
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px;max-width:1200px;margin:0 auto}
+  .card{grid-column:span 12;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;color:var(--text);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  @media(min-width:880px){.span-4{grid-column:span 4}.span-8{grid-column:span 8}}
+  .kpi{display:flex;align-items:center;justify-content:space-between}
+  .kpi h3{margin:0 0 8px 0;font-size:16px;color:var(--muted);font-weight:600}
+  .kpi .num{font-size:28px;font-weight:800}
+  .pill{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid var(--border);background:#0e1729;color:var(--muted);font-size:12px}
+  table{width:100%;border-collapse:collapse}
+  th,td{border-bottom:1px dashed var(--border);padding:10px;text-align:left}
+  th{color:var(--muted);font-weight:600}
+  .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--err)}
+  footer{color:var(--muted);text-align:center;padding:30px 16px}
+  .btn{cursor:pointer;border:1px solid var(--border);background:#0e1729;color:var(--text);padding:10px 12px;border-radius:12px}
+  .btn:hover{border-color:var(--accent)}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>DevOps WebServer – Dashboard</h1>
+    <nav>
+      <a href="index.html">Dashboard</a>
+      <a href="status.html">Status</a>
+      <a href="logs.html">Logs</a>
+      <a href="downloads.html">Downloads</a>
+      <a href="admin.html">Admin</a>
+      <a href="readme.html">Readme</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+    <section class="card span-8">
+      <div class="kpi">
+        <div>
+          <h3>Active Connections</h3>
+          <div class="num" id="activeConn">58</div>
+        </div>
+        <span class="pill">Updated <span id="updatedAgo">just now</span></span>
+      </div>
+      <div style="height:14px"></div>
+      <div>
+        <canvas id="traffic" height="110" style="width:100%"></canvas>
+      </div>
+    </section>
+
+    <section class="card span-4">
+      <div class="kpi"><h3>Uptime</h3><div class="num" id="uptime">03:12:47</div></div>
+      <div class="kpi"><h3>CPU</h3><div class="num"><span id="cpu" class="warn">57%</span></div></div>
+      <div class="kpi"><h3>RAM</h3><div class="num"><span id="ram" class="ok">42%</span></div></div>
+      <div class="kpi"><h3>Last Deploy</h3><div class="num"><span id="deploy">2025-08-25 14:06</span></div></div>
+      <div style="height:8px"></div>
+      <button class="btn" onclick="simulate()">Refresh Mock Stats</button>
+    </section>
+
+    <section class="card span-12">
+      <h3 style="margin:0 0 12px 0;color:var(--muted)">Recent Requests (mock)</h3>
+      <table>
+        <thead><tr><th>Time</th><th>Method</th><th>Path</th><th>Status</th><th>Latency</th></tr></thead>
+        <tbody id="reqTable"></tbody>
+      </table>
+    </section>
+  </div>
+</main>
+
+<footer>
+  Static “only-HTML” DevOps demo • Replace mock data with your server endpoints when available.
+</footer>
+
+<script>
+  // Lightweight chart without external libs
+  const ctx = document.getElementById('traffic').getContext('2d');
+  // Simple line chart renderer
+  function drawChart(points){
+    const c = ctx.canvas, w=c.width=ctx.canvas.clientWidth*2, h=c.height=220; ctx.scale(2,2);
+    ctx.clearRect(0,0,w,h); const pad=16;
+    const max = Math.max(...points, 1), step=(w/2 - pad*2)/(points.length-1);
+    ctx.strokeStyle="rgba(76,201,240,0.9)"; ctx.lineWidth=2; ctx.beginPath();
+    points.forEach((v,i)=>{ const x=pad+i*step, y=(h/2-pad) - (v/max)*(h/2-pad*2); i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+    ctx.stroke(); ctx.fillStyle="rgba(76,201,240,0.12)";
+    ctx.lineTo(w/2-pad,h/2-pad); ctx.lineTo(pad,h/2-pad); ctx.closePath(); ctx.fill();
+  }
+
+  // Mock KPIs + table
+  const reqTable = document.getElementById('reqTable');
+  function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a}
+  function simulate(){
+    document.getElementById('activeConn').textContent = rand(20,140);
+    const cpu=rand(10,95), ram=rand(20,88);
+    const cpuEl=document.getElementById('cpu'); const ramEl=document.getElementById('ram');
+    cpuEl.textContent=cpu+'%'; ramEl.textContent=ram+'%';
+    cpuEl.className = cpu>80?'err':cpu>60?'warn':'ok';
+    ramEl.className = ram>80?'err':ram>60?'warn':'ok';
+    const now=new Date();
+    document.getElementById('deploy').textContent = new Date(now-1000*60*rand(30,5000)).toISOString().slice(0,16).replace('T',' ');
+    document.getElementById('uptime').textContent = new Date(rand(0,10)*3600*1000+rand(0,59)*60000+rand(0,59)*1000).toISOString().substr(11,8);
+    const pts = Array.from({length:24},()=>rand(5,120)); drawChart(pts);
+
+    const methods=['GET','POST','PUT','DELETE']; const paths=['/','/api/health','/login','/assets/app.js','/download/tool.tar.gz'];
+    const statuses=[200,200,200,201,204,301,302,400,401,403,404,500,502,504];
+    reqTable.innerHTML = Array.from({length:12},()=> {
+      const s = statuses[rand(0,statuses.length-1)];
+      const cls = s>=500?'err':s>=400?'warn':'ok';
+      return `<tr><td>${new Date().toISOString().replace('T',' ').slice(0,19)}</td><td>${methods[rand(0,3)]}</td><td>${paths[rand(0,4)]}</td><td class="${cls}">${s}</td><td>${rand(4,450)} ms</td></tr>`;
+    }).join('');
+    document.getElementById('updatedAgo').textContent='just now';
+  }
+  simulate();
+  setInterval(()=>{simulate();}, 6000);
+</script>
+</body>
+</html>

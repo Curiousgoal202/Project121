@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Utilities</title>
+<style>
+  body{margin:0;background:#0b1220;color:#eaf1ff;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
+  header,main{max-width:1100px;margin:0 auto;padding:16px}
+  header{position:sticky;top:0;background:rgba(11,18,32,.7);backdrop-filter:blur(8px);border-bottom:1px solid #1e2a44}
+  a{color:#9dd6ff;text-decoration:none}
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+  .card{background:#121a2b;border:1px solid #1e2a44;border-radius:16px;padding:16px}
+  .btn{padding:10px 12px;border:1px solid #1e2a44;border-radius:12px;background:#0e1729;color:#eaf1ff;cursor:pointer}
+  .btn:hover{border-color:#4cc9f0}
+  textarea{width:100%;min-height:160px;background:#0e1729;border:1px solid #1e2a44;border-radius:12px;color:#eaf1ff;padding:12px}
+  .muted{color:#7b8aa0}
+  pre{background:#0e1729;border:1px solid #1e2a44;border-radius:12px;padding:12px;overflow:auto}
+</style>
+</head>
+<body>
+<header>
+  <div style="display:flex;gap:10px;align-items:center;justify-content:space-between">
+    <div><b>Admin Utilities</b></div>
+    <nav style="display:flex;gap:10px">
+      <a href="index.html">Dashboard</a>
+      <a href="status.html">Status</a>
+      <a href="logs.html">Logs</a>
+      <a href="downloads.html">Downloads</a>
+      <a href="readme.html">Readme</a>
+    </nav>
+  </div>
+</header>
+<main class="grid">
+  <section class="card">
+    <h3 style="margin:0 0 6px 0">Deploy (simulate)</h3>
+    <div class="muted">In a static demo we just show commands and a faux output. Wire these buttons to your backend later.</div>
+    <div style="height:8px"></div>
+    <button class="btn" onclick="run('deploy')">Run Deploy</button>
+    <button class="btn" onclick="run('restart')" style="margin-left:8px">Restart Service</button>
+    <button class="btn" onclick="run('rollback')" style="margin-left:8px">Rollback</button>
+    <div style="height:10px"></div>
+    <pre id="deployOut"></pre>
+  </section>
+
+  <section class="card">
+    <h3 style="margin:0 0 6px 0">Nginx vhost (preview)</h3>
+    <textarea readonly>
+server {
+  listen 80 default_server;
+  server_name _;
+  root /usr/share/nginx/html;
+
+  location / {
+    try_files $uri $uri/ =404;
+  }
+
+  location /downloads/ {
+    autoindex on;
+  }
+
+  # health probe
+  location = /health.html { access_log off; }
+}
+    </textarea>
+    <div class="muted">Drop these HTML files in <code>/usr/share/nginx/html</code>. Place artifacts in <code>/usr/share/nginx/html/downloads/</code>.</div>
+  </section>
+
+  <section class="card">
+    <h3 style="margin:0 0 6px 0">Curl checks (copy)</h3>
+    <pre>
+curl -I http://localhost/
+curl -f http://localhost/health.html
+curl -I http://localhost/downloads/
+curl -s http://localhost/status.html | wc -c
+    </pre>
+  </section>
+</main>
+<script>
+  function run(which){
+    const out=document.getElementById('deployOut');
+    const now=new Date().toISOString().replace('T',' ').slice(0,19);
+    const lines={
+      deploy:[
+        `[${now}] Starting deploy...`,
+        `Pulling artifact: tool-linux-amd64.tar.gz`,
+        `Updating symlink: current -> releases/2025-08-29T${Math.random().toString(36).slice(2,6)}`,
+        `Reloading Nginx... done`,
+        `Deploy finished successfully.`
+      ],
+      restart:[
+        `[${now}] Restarting service webserver.service...`,
+        `Stopping... done`,
+        `Starting... done`,
+        `Status: active (running)`
+      ],
+      rollback:[
+        `[${now}] Rolling back to previous release...`,
+        `Switching symlink...`,
+        `Reloading Nginx... done`,
+        `Rollback complete.`
+      ]
+    }[which];
+    out.textContent = lines.join('\n');
+  }
+</script>
+</body>
+</html>

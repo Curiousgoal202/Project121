@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>READ ME – Serve This Project</title>
+<style>
+  body{margin:0;background:#0b1220;color:#eaf1ff;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
+  main{max-width:900px;margin:0 auto;padding:24px}
+  code{background:#0e1729;border:1px solid #1e2a44;border-radius:8px;padding:2px 6px}
+  pre{background:#0e1729;border:1px solid #1e2a44;border-radius:12px;padding:12px;overflow:auto}
+  a{color:#9dd6ff}
+  h1,h2{margin:0 0 12px 0}
+  .muted{color:#7b8aa0}
+</style>
+</head>
+<body>
+<main>
+  <h1>READ ME</h1>
+  <p class="muted">This project is 100% static – only HTML files with inline CSS/JS. Perfect for Nginx/Apache/S3/Netlify or a tiny Docker container.</p>
+
+  <h2>Folder layout</h2>
+  <pre>
+/usr/share/nginx/html/
+  index.html
+  status.html
+  logs.html
+  downloads.html
+  admin.html
+  readme.html
+  /downloads/
+     tool-linux-amd64.tar.gz
+     tool-windows-x64.zip
+     tool-darwin-arm64.tar.gz
+  </pre>
+
+  <h2>Run with Docker (Nginx)</h2>
+  <pre>
+docker run -d --name web \
+  -p 80:80 \
+  -v $PWD:/usr/share/nginx/html:ro \
+  nginx:alpine
+  </pre>
+
+  <h2>NGINX on Linux (no Docker)</h2>
+  <pre>
+sudo apt-get update && sudo apt-get install -y nginx
+sudo cp *.html /usr/share/nginx/html/
+sudo mkdir -p /usr/share/nginx/html/downloads
+# put your artifacts into /usr/share/nginx/html/downloads/
+sudo systemctl enable --now nginx
+  </pre>
+
+  <h2>Apache</h2>
+  <pre>
+sudo apt-get install -y apache2
+sudo cp *.html /var/www/html/
+sudo mkdir -p /var/www/html/downloads
+sudo systemctl enable --now apache2
+  </pre>
+
+  <h2>Make health endpoint</h2>
+  <p>Create a minimal <code>health.html</code> file (optional):</p>
+  <pre>
+echo "&lt;!doctype html&gt;&lt;title&gt;OK&lt;/title&gt;OK" | sudo tee /usr/share/nginx/html/health.html
+  </pre>
+
+  <h2>Wire to real data later</h2>
+  <ul>
+    <li>Replace mock metrics in <code>status.html</code> with <code>fetch('/api/metrics')</code>.</li>
+    <li>Replace inline logs in <code>logs.html</code> with <code>fetch('/logs')</code> (server should stream or paginate).</li>
+    <li>Point <code>downloads.html</code> hrefs at your real artifacts paths.</li>
+    <li>Secure these pages behind auth at the reverse-proxy layer (e.g., Basic Auth in Nginx).</li>
+  </ul>
+
+  <h2>Quick Basic Auth (Nginx)</h2>
+  <pre>
+sudo apk add apache2-utils  # or: sudo apt-get install apache2-utils
+htpasswd -bc auth admin S3cretP@ss
+# nginx server block:
+location / { auth_basic "Restricted"; auth_basic_user_file /etc/nginx/auth; }
+  </pre>
+
+  <p class="muted">All set. Open <a href="index.html">index.html</a> to start.</p>
+</main>
+</body>
+</html>

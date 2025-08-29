@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Server Status</title>
+<style>
+  body{margin:0;background:#0b1220;color:#eaf1ff;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
+  a{color:#9dd6ff;text-decoration:none} header,main{max-width:1100px;margin:0 auto;padding:16px}
+  header{position:sticky;top:0;background:rgba(11,18,32,.7);backdrop-filter:blur(8px);border-bottom:1px solid #1e2a44}
+  .grid{display:grid;gap:14px}
+  .card{background:#121a2b;border:1px solid #1e2a44;border-radius:16px;padding:16px}
+  .muted{color:#7b8aa0}
+  .kpi{display:flex;justify-content:space-between;align-items:center}
+  .ok{color:#21c55d}.warn{color:#f59e0b}.err{color:#ef4444}
+  .btn{padding:10px 12px;border:1px solid #1e2a44;border-radius:12px;background:#0e1729;color:#eaf1ff;cursor:pointer}
+  .btn:hover{border-color:#4cc9f0}
+</style>
+</head>
+<body>
+<header>
+  <div style="display:flex;gap:10px;align-items:center;justify-content:space-between">
+    <div><b>Server Status</b></div>
+    <nav style="display:flex;gap:10px">
+      <a href="index.html">Dashboard</a>
+      <a href="logs.html">Logs</a>
+      <a href="downloads.html">Downloads</a>
+      <a href="admin.html">Admin</a>
+      <a href="readme.html">Readme</a>
+    </nav>
+  </div>
+</header>
+<main class="grid">
+  <section class="card">
+    <div class="kpi"><h3 style="margin:0">Health</h3><span id="health" class="ok">HEALTHY</span></div>
+    <div class="muted">Auto-refreshing every 5s (mock). Replace fetch endpoints to wire real data.</div>
+  </section>
+  <section class="card">
+    <h3 style="margin-top:0">Resources</h3>
+    <div class="grid" style="grid-template-columns:repeat(3,1fr);gap:10px">
+      <div><div class="muted">CPU</div><div id="cpu" class="ok">34%</div></div>
+      <div><div class="muted">RAM</div><div id="ram" class="warn">66%</div></div>
+      <div><div class="muted">Disk</div><div id="disk" class="ok">49%</div></div>
+    </div>
+  </section>
+  <section class="card">
+    <h3 style="margin-top:0">Top Endpoints (last 5 min, mock)</h3>
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr><th style="text-align:left;padding:8px;border-bottom:1px dashed #1e2a44">Path</th><th style="text-align:left;padding:8px;border-bottom:1px dashed #1e2a44">RPS</th><th style="text-align:left;padding:8px;border-bottom:1px dashed #1e2a44">P95</th></tr></thead>
+      <tbody id="tops"></tbody>
+    </table>
+  </section>
+  <section class="card">
+    <div class="kpi"><h3 style="margin:0">Controls</h3><button class="btn" onclick="refresh()">Force Refresh</button></div>
+  </section>
+</main>
+<script>
+  const cls = v=> v>85?'err':v>65?'warn':'ok';
+  function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a}
+  function refresh(){
+    const cpu=rand(10,97), ram=rand(20,96), disk=rand(15,92);
+    ['cpu','ram','disk'].forEach((k,i)=>{const val=[cpu,ram,disk][i]; const el=document.getElementById(k); el.textContent=val+'%'; el.className=cls(val);});
+    const health = (cpu<90 && ram<90) ? 'HEALTHY' : (cpu>95 || ram>95 ? 'DEGRADED' : 'OK');
+    const hEl = document.getElementById('health'); hEl.textContent=health; hEl.className = health==='HEALTHY'?'ok':health==='OK'?'warn':'err';
+    const data=[
+      ['/', rand(60,240), rand(20,150)+' ms'],
+      ['/api/health', rand(40,120), rand(10,80)+' ms'],
+      ['/api/login', rand(5,30), rand(100,600)+' ms'],
+      ['/assets/app.js', rand(30,110), rand(10,60)+' ms'],
+      ['/download/tool.tar.gz', rand(3,12), rand(200,1200)+' ms']
+    ];
+    document.getElementById('tops').innerHTML=data.map(r=>`<tr><td style="padding:8px;border-bottom:1px dashed #1e2a44">${r[0]}</td><td style="padding:8px;border-bottom:1px dashed #1e2a44">${r[1]}</td><td style="padding:8px;border-bottom:1px dashed #1e2a44">${r[2]}</td></tr>`).join('');
+  }
+  refresh(); setInterval(refresh, 5000);
+</script>
+</body>
+</html>
