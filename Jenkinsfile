@@ -22,6 +22,15 @@ pipeline {
                 echo 'Running test'
             }
         }
+       stage('Code Quality Check'){
+            steps{
+               sh '''
+                  npm install -g htmlhint
+                 htmlhint **/*.html
+                  '''
+                  }
+               }
+
         stage('Build Docker Image') {
             steps {
                 sh "docker build -t $IMAGE_NAME:$IMAGE_TAG ."
