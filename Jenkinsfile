@@ -32,8 +32,8 @@ pipeline {
                }
        stage('Security Scan'){
                  steps{
-                     sh 'docker run --rm -i hadolint/hadolint < Dockerfile || true
-                        '
+                     sh """docker run --rm -i hadolint/hadolint < Dockerfile || true
+                        """
                          }
                    }
 
